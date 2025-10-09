@@ -9,23 +9,17 @@ import {
   BarChart3, 
   Settings,
   LogOut,
-  Home
+  Home,
+  MessageSquare,
+  UserCog,
+  Bell,
+  Shield,
 } from 'lucide-react-native';
 import { useAuth } from '../contexts/auth-context';
 
 interface SidebarProps {
   onClose?: () => void;
 }
-
-const menuItems = [
-  { id: 'dashboard', title: 'Dashboard', icon: Home, route: '/' },
-  { id: 'inventory', title: 'Inventory', icon: Package, route: '/inventory' },
-  { id: 'sales', title: 'Sales', icon: ShoppingCart, route: '/sales' },
-  { id: 'suppliers', title: 'Suppliers', icon: Users, route: '/suppliers' },
-  { id: 'categories', title: 'Categories', icon: Tag, route: '/categories' },
-  { id: 'reports', title: 'Reports', icon: BarChart3, route: '/reports' },
-  { id: 'settings', title: 'Settings', icon: Settings, route: '/settings' },
-];
 
 export default function Sidebar({ onClose }: SidebarProps) {
   const router = useRouter();
@@ -42,27 +36,60 @@ export default function Sidebar({ onClose }: SidebarProps) {
     onClose?.();
   };
 
+  // ✅ Main Sidebar Menu
+  const menuItems = [
+    { id: 'dashboard', title: 'Dashboard', icon: Home, route: '/' },
+    { id: 'inventory', title: 'Inventory', icon: Package, route: '/inventory' },
+    { id: 'sales', title: 'Sales', icon: ShoppingCart, route: '/sales' },
+    { id: 'suppliers', title: 'Suppliers', icon: Users, route: '/suppliers' },
+    { id: 'categories', title: 'Categories', icon: Tag, route: '/categories' },
+    { id: 'chats', title: 'Chats', icon: MessageSquare, route: '/chats' },
+    { id: 'reports', title: 'Reports', icon: BarChart3, route: '/reports' },
+  ];
+
+  // ✅ Settings-related Buttons (to show for everyone, including staff)
+  const settingsButtons = [
+    { id: 'profile', title: 'Profile Settings', icon: UserCog, route: '/profile' },
+    // { id: 'notifications', title: 'Notifications', icon: Bell, route: '/settings/notifications' },
+    // { id: 'security', title: 'Security', icon: Shield, route: '/settings/security' },
+    // { id: 'system', title: 'System Preferences', icon: Settings, route: '/settings/system' },
+  ];
+
+  // ✅ Combine main + settings buttons for staff
   const getFilteredMenuItems = () => {
-    return menuItems.filter(item => {
-      if (item.id === 'settings' && !hasPermission('admin')) {
-        return false;
-      }
-      return true;
-    });
+    let visibleItems = [...menuItems];
+
+    // Show Settings items for admin normally
+    if (hasPermission('admin')) {
+      visibleItems.push({
+        id: 'settings',
+        title: 'Settings',
+        icon: Settings,
+        route: '/profile',
+      });
+    } else {
+      // For staff, show all settings-related buttons on the dashboard
+      visibleItems = [...visibleItems, ...settingsButtons];
+    }
+
+    return visibleItems;
   };
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>Inventoree</Text>
         <Text style={styles.subtitle}>Inventory Management</Text>
       </View>
 
+      {/* User Info */}
       <View style={styles.userInfo}>
         <Text style={styles.userName}>{user?.name}</Text>
         <Text style={styles.userRole}>{user?.role?.toUpperCase()}</Text>
       </View>
 
+      {/* Menu List */}
       <ScrollView style={styles.menu}>
         {getFilteredMenuItems().map((item) => {
           const Icon = item.icon;
@@ -86,6 +113,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         })}
       </ScrollView>
 
+      {/* Logout */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <LogOut size={20} color="#ef4444" />
         <Text style={styles.logoutText}>Logout</Text>
@@ -142,7 +170,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   activeMenuItem: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: '#e0f2fe',
+    borderLeftWidth: 4,
+    borderLeftColor: '#2563eb',
   },
   menuText: {
     fontSize: 16,

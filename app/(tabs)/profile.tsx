@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, Switch, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User, Camera, Save, Moon, Sun, Bell, Shield, Globe, Smartphone, Mail, MapPin, Edit3, Check } from 'lucide-react-native';
+import { User, Camera, Check, Edit3, Moon, Sun, Bell, Shield, Globe, Smartphone, Mail } from 'lucide-react-native';
 import { useAuth } from '../../contexts/auth-context';
 import { useTheme } from '../../contexts/theme-context';
 import Card from '../../components/ui/Card';
-// import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 
 export default function ProfileScreen() {
   const { user, updateProfile } = useAuth();
   const { theme, colors, toggleTheme, setThemeMode } = useTheme();
+
+  // Profile states
   const [name, setName] = useState(user?.name || '');
   const [profilePhoto, setProfilePhoto] = useState(user?.profilePhoto || '');
   const [bio, setBio] = useState(user?.bio || '');
@@ -19,13 +20,13 @@ export default function ProfileScreen() {
   const [location, setLocation] = useState(user?.location || '');
   const [loading, setLoading] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
-  
+
   // Notification preferences
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [salesAlerts, setSalesAlerts] = useState(true);
   const [lowStockAlerts, setLowStockAlerts] = useState(true);
-  
+
   // App preferences
   const [autoSync, setAutoSync] = useState(true);
   const [offlineMode, setOfflineMode] = useState(false);
@@ -52,7 +53,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const savePreferences = async (newPrefs: any) => {
+  const savePreferences = async (newPrefs: any = {}) => {
     try {
       const preferences = {
         emailNotifications,
@@ -69,53 +70,33 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleNotificationChange = (key: string, value: boolean) => {
-    const updates = { [key]: value };
-    savePreferences(updates);
-    
-    switch (key) {
-      case 'emailNotifications':
-        setEmailNotifications(value);
-        break;
-      case 'pushNotifications':
-        setPushNotifications(value);
-        break;
-      case 'salesAlerts':
-        setSalesAlerts(value);
-        break;
-      case 'lowStockAlerts':
-        setLowStockAlerts(value);
-        break;
-      case 'autoSync':
-        setAutoSync(value);
-        break;
-      case 'offlineMode':
-        setOfflineMode(value);
-        break;
-    }
-  };
-
-  const handleSaveProfile = async () => {
+  const handleSaveAllChanges = async () => {
     if (!name.trim()) {
       Alert.alert('Error', 'Name cannot be empty');
       return;
     }
 
     setLoading(true);
-    const result = await updateProfile({
+
+    // Save profile
+    const profileResult = await updateProfile({
       name: name.trim(),
       profilePhoto: profilePhoto || undefined,
       bio: bio.trim() || undefined,
       phone: phone.trim() || undefined,
       location: location.trim() || undefined,
     });
+
+    // Save preferences
+    await savePreferences({});
+
     setLoading(false);
 
-    if (result.success) {
-      Alert.alert('Success', 'Profile updated successfully');
+    if (profileResult.success) {
+      Alert.alert('Success', 'All changes have been saved successfully');
       setEditingField(null);
     } else {
-      Alert.alert('Error', result.error || 'Failed to update profile');
+      Alert.alert('Error', profileResult.error || 'Failed to save changes');
     }
   };
 
@@ -176,84 +157,12 @@ export default function ProfileScreen() {
   };
 
   const dynamicStyles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: colors.text,
-    },
-    subtitle: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      marginTop: 4,
-    },
-    sectionTitle: {
-      fontSize: 20,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 16,
-    },
-    card: {
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
-    },
-    roleText: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      textTransform: 'capitalize',
-    },
-    themeOption: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: 16,
-      paddingHorizontal: 20,
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      marginBottom: 12,
-    },
-    themeText: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: colors.text,
-      marginLeft: 12,
-    },
-    themeLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    settingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: 16,
-      paddingHorizontal: 20,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    settingLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flex: 1,
-    },
-    settingIcon: {
-      marginRight: 12,
-    },
-    settingText: {
-      fontSize: 16,
-      color: colors.text,
-      flex: 1,
-    },
-    settingDescription: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      marginTop: 2,
-    },
+    container: { flex: 1, backgroundColor: colors.background },
+    title: { fontSize: 28, fontWeight: 'bold', color: colors.text },
+    subtitle: { fontSize: 16, color: colors.textSecondary, marginTop: 4 },
+    sectionTitle: { fontSize: 20, fontWeight: '600', color: colors.text, marginBottom: 16 },
+    card: { backgroundColor: colors.surface, borderColor: colors.border },
+    roleText: { fontSize: 16, color: colors.textSecondary, textTransform: 'capitalize' },
     editableField: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -266,47 +175,19 @@ export default function ProfileScreen() {
       borderColor: colors.border,
       marginBottom: 12,
     },
-    fieldContent: {
-      flex: 1,
-      marginRight: 12,
-    },
-    fieldLabel: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      marginBottom: 4,
-    },
-    fieldValue: {
-      fontSize: 16,
-      color: colors.text,
-    },
-    themeSelector: {
-      flexDirection: 'row',
-      marginBottom: 16,
-    },
-    themeButton: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      borderRadius: 8,
-      borderWidth: 2,
-      marginHorizontal: 4,
-    },
-    themeButtonActive: {
-      borderColor: colors.primary,
-      backgroundColor: colors.primary + '10',
-    },
-    themeButtonInactive: {
-      borderColor: colors.border,
-      backgroundColor: colors.surface,
-    },
-    themeButtonText: {
-      marginLeft: 8,
-      fontSize: 14,
-      fontWeight: '500',
-    },
+    fieldContent: { flex: 1, marginRight: 12 },
+    fieldLabel: { fontSize: 12, color: colors.textSecondary, marginBottom: 4 },
+    fieldValue: { fontSize: 16, color: colors.text },
+    themeSelector: { flexDirection: 'row', marginBottom: 16 },
+    themeButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16, borderRadius: 8, borderWidth: 2, marginHorizontal: 4 },
+    themeButtonActive: { borderColor: colors.primary, backgroundColor: colors.primary + '10' },
+    themeButtonInactive: { borderColor: colors.border, backgroundColor: colors.surface },
+    themeButtonText: { marginLeft: 8, fontSize: 14, fontWeight: '500' },
+    settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: colors.border },
+    settingLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+    settingIcon: { marginRight: 12 },
+    settingText: { fontSize: 16, color: colors.text, flex: 1 },
+    settingDescription: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
   });
 
   return (
@@ -317,6 +198,7 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Profile Card */}
         <Card style={[styles.profileCard, dynamicStyles.card]}>
           <View style={styles.profileHeader}>
             <TouchableOpacity style={styles.photoContainer} onPress={handlePhotoSelect}>
@@ -328,10 +210,9 @@ export default function ProfileScreen() {
                 </View>
               )}
               <View style={styles.cameraIcon}>
-                <Camera size={16} color="#ffffff" />
+                <Camera size={16} color="#fff" />
               </View>
             </TouchableOpacity>
-            
             <View style={styles.userInfo}>
               <Text style={[styles.userName, { color: colors.text }]}>{user?.name}</Text>
               <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{user?.email}</Text>
@@ -340,254 +221,131 @@ export default function ProfileScreen() {
           </View>
         </Card>
 
+        {/* Personal Info */}
         <Text style={dynamicStyles.sectionTitle}>Personal Information</Text>
         <Card style={[styles.section, dynamicStyles.card]}>
-          <TouchableOpacity 
-            style={dynamicStyles.editableField} 
-            onPress={() => handleFieldEdit('name')}
-          >
-            <View style={dynamicStyles.fieldContent}>
-              <Text style={dynamicStyles.fieldLabel}>Full Name</Text>
-              {editingField === 'name' ? (
-                <Input
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Enter your full name"
-                  autoFocus
-                />
-              ) : (
-                <Text style={dynamicStyles.fieldValue}>{name || 'Not set'}</Text>
-              )}
-            </View>
-            {editingField === 'name' ? (
-              <TouchableOpacity onPress={handleSaveProfile}>
-                <Check size={20} color={colors.primary} />
-              </TouchableOpacity>
-            ) : (
-              <Edit3 size={16} color={colors.textSecondary} />
-            )}
-          </TouchableOpacity>
+          {['name', 'bio', 'phone', 'location'].map((field) => {
+            let value = '';
+            let setter = (val: string) => {};
+            let placeholder = '';
+            let multiline = false;
+            let keyboardType: 'default' | 'phone-pad' = 'default';
 
-          <TouchableOpacity 
-            style={dynamicStyles.editableField} 
-            onPress={() => handleFieldEdit('bio')}
-          >
-            <View style={dynamicStyles.fieldContent}>
-              <Text style={dynamicStyles.fieldLabel}>Bio</Text>
-              {editingField === 'bio' ? (
-                <Input
-                  value={bio}
-                  onChangeText={setBio}
-                  placeholder="Tell us about yourself"
-                  multiline
-                  autoFocus
-                />
-              ) : (
-                <Text style={dynamicStyles.fieldValue}>{bio || 'Add a bio'}</Text>
-              )}
-            </View>
-            {editingField === 'bio' ? (
-              <TouchableOpacity onPress={handleSaveProfile}>
-                <Check size={20} color={colors.primary} />
-              </TouchableOpacity>
-            ) : (
-              <Edit3 size={16} color={colors.textSecondary} />
-            )}
-          </TouchableOpacity>
+            switch (field) {
+              case 'name': value = name; setter = setName; placeholder = 'Enter your full name'; break;
+              case 'bio': value = bio; setter = setBio; placeholder = 'Tell us about yourself'; multiline = true; break;
+              case 'phone': value = phone; setter = setPhone; placeholder = 'Enter phone number'; keyboardType = 'phone-pad'; break;
+              case 'location': value = location; setter = setLocation; placeholder = 'Enter your location'; break;
+            }
 
-          <TouchableOpacity 
-            style={dynamicStyles.editableField} 
-            onPress={() => handleFieldEdit('phone')}
-          >
-            <View style={dynamicStyles.fieldContent}>
-              <Text style={dynamicStyles.fieldLabel}>Phone Number</Text>
-              {editingField === 'phone' ? (
-                <Input
-                  value={phone}
-                  onChangeText={setPhone}
-                  placeholder="Enter phone number"
-                  keyboardType="phone-pad"
-                  autoFocus
-                />
-              ) : (
-                <Text style={dynamicStyles.fieldValue}>{phone || 'Add phone number'}</Text>
-              )}
-            </View>
-            {editingField === 'phone' ? (
-              <TouchableOpacity onPress={handleSaveProfile}>
-                <Check size={20} color={colors.primary} />
+            return (
+              <TouchableOpacity
+                key={field}
+                style={dynamicStyles.editableField}
+                onPress={() => handleFieldEdit(field)}
+              >
+                <View style={dynamicStyles.fieldContent}>
+                  <Text style={dynamicStyles.fieldLabel}>{field.charAt(0).toUpperCase() + field.slice(1)}</Text>
+                  {editingField === field ? (
+                    <Input
+                      value={value}
+                      onChangeText={setter}
+                      placeholder={placeholder}
+                      multiline={multiline}
+                      keyboardType={keyboardType}
+                      autoFocus
+                    />
+                  ) : (
+                    <Text style={dynamicStyles.fieldValue}>{value || 'Not set'}</Text>
+                  )}
+                </View>
+                {editingField === field ? (
+                  <TouchableOpacity onPress={handleSaveAllChanges}>
+                    <Check size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                ) : (
+                  <Edit3 size={16} color={colors.textSecondary} />
+                )}
               </TouchableOpacity>
-            ) : (
-              <Edit3 size={16} color={colors.textSecondary} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={dynamicStyles.editableField} 
-            onPress={() => handleFieldEdit('location')}
-          >
-            <View style={dynamicStyles.fieldContent}>
-              <Text style={dynamicStyles.fieldLabel}>Location</Text>
-              {editingField === 'location' ? (
-                <Input
-                  value={location}
-                  onChangeText={setLocation}
-                  placeholder="Enter your location"
-                  autoFocus
-                />
-              ) : (
-                <Text style={dynamicStyles.fieldValue}>{location || 'Add location'}</Text>
-              )}
-            </View>
-            {editingField === 'location' ? (
-              <TouchableOpacity onPress={handleSaveProfile}>
-                <Check size={20} color={colors.primary} />
-              </TouchableOpacity>
-            ) : (
-              <Edit3 size={16} color={colors.textSecondary} />
-            )}
-          </TouchableOpacity>
+            );
+          })}
         </Card>
 
+        {/* Appearance */}
         <Text style={dynamicStyles.sectionTitle}>Appearance</Text>
         <Card style={[styles.section, dynamicStyles.card]}>
           <View style={dynamicStyles.themeSelector}>
-            <TouchableOpacity 
-              style={[
-                dynamicStyles.themeButton,
-                theme === 'light' ? dynamicStyles.themeButtonActive : dynamicStyles.themeButtonInactive
-              ]}
+            <TouchableOpacity
+              style={[dynamicStyles.themeButton, theme === 'light' ? dynamicStyles.themeButtonActive : dynamicStyles.themeButtonInactive]}
               onPress={() => setThemeMode('light')}
             >
               <Sun size={18} color={theme === 'light' ? colors.primary : colors.textSecondary} />
-              <Text style={[
-                dynamicStyles.themeButtonText,
-                { color: theme === 'light' ? colors.primary : colors.textSecondary }
-              ]}>
-                Light
-              </Text>
+              <Text style={[dynamicStyles.themeButtonText, { color: theme === 'light' ? colors.primary : colors.textSecondary }]}>Light</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[
-                dynamicStyles.themeButton,
-                theme === 'dark' ? dynamicStyles.themeButtonActive : dynamicStyles.themeButtonInactive
-              ]}
+
+            <TouchableOpacity
+              style={[dynamicStyles.themeButton, theme === 'dark' ? dynamicStyles.themeButtonActive : dynamicStyles.themeButtonInactive]}
               onPress={() => setThemeMode('dark')}
             >
               <Moon size={18} color={theme === 'dark' ? colors.primary : colors.textSecondary} />
-              <Text style={[
-                dynamicStyles.themeButtonText,
-                { color: theme === 'dark' ? colors.primary : colors.textSecondary }
-              ]}>
-                Dark
-              </Text>
+              <Text style={[dynamicStyles.themeButtonText, { color: theme === 'dark' ? colors.primary : colors.textSecondary }]}>Dark</Text>
             </TouchableOpacity>
           </View>
         </Card>
 
+        {/* Notifications */}
         <Text style={dynamicStyles.sectionTitle}>Notifications</Text>
         <Card style={[styles.section, dynamicStyles.card]}>
-          <View style={dynamicStyles.settingRow}>
-            <View style={dynamicStyles.settingLeft}>
-              <Bell size={20} color={colors.primary} style={dynamicStyles.settingIcon} />
-              <View>
-                <Text style={dynamicStyles.settingText}>Push Notifications</Text>
-                <Text style={dynamicStyles.settingDescription}>Receive alerts on your device</Text>
+          {[
+            { key: 'pushNotifications', icon: Bell, label: 'Push Notifications', desc: 'Receive alerts on your device', value: pushNotifications, setter: setPushNotifications },
+            { key: 'emailNotifications', icon: Mail, label: 'Email Notifications', desc: 'Get updates via email', value: emailNotifications, setter: setEmailNotifications },
+            { key: 'salesAlerts', icon: Smartphone, label: 'Sales Alerts', desc: 'Notify when sales are recorded', value: salesAlerts, setter: setSalesAlerts },
+            { key: 'lowStockAlerts', icon: Globe, label: 'Low Stock Alerts', desc: 'Alert when inventory is low', value: lowStockAlerts, setter: setLowStockAlerts },
+          ].map((item, idx) => (
+            <View key={item.key} style={[dynamicStyles.settingRow, idx === 3 ? { borderBottomWidth: 0 } : {}]}>
+              <View style={dynamicStyles.settingLeft}>
+                <item.icon size={20} color={colors.primary} style={dynamicStyles.settingIcon} />
+                <View>
+                  <Text style={dynamicStyles.settingText}>{item.label}</Text>
+                  <Text style={dynamicStyles.settingDescription}>{item.desc}</Text>
+                </View>
               </View>
+              <Switch
+                value={item.value}
+                onValueChange={(value) => { item.setter(value); savePreferences({ [item.key]: value }); }}
+                trackColor={{ false: colors.border, true: colors.primary + '40' }}
+                thumbColor={item.value ? colors.primary : colors.textSecondary}
+              />
             </View>
-            <Switch
-              value={pushNotifications}
-              onValueChange={(value) => handleNotificationChange('pushNotifications', value)}
-              trackColor={{ false: colors.border, true: colors.primary + '40' }}
-              thumbColor={pushNotifications ? colors.primary : colors.textSecondary}
-            />
-          </View>
-          
-          <View style={dynamicStyles.settingRow}>
-            <View style={dynamicStyles.settingLeft}>
-              <Mail size={20} color={colors.primary} style={dynamicStyles.settingIcon} />
-              <View>
-                <Text style={dynamicStyles.settingText}>Email Notifications</Text>
-                <Text style={dynamicStyles.settingDescription}>Get updates via email</Text>
-              </View>
-            </View>
-            <Switch
-              value={emailNotifications}
-              onValueChange={(value) => handleNotificationChange('emailNotifications', value)}
-              trackColor={{ false: colors.border, true: colors.primary + '40' }}
-              thumbColor={emailNotifications ? colors.primary : colors.textSecondary}
-            />
-          </View>
-          
-          <View style={dynamicStyles.settingRow}>
-            <View style={dynamicStyles.settingLeft}>
-              <Smartphone size={20} color={colors.primary} style={dynamicStyles.settingIcon} />
-              <View>
-                <Text style={dynamicStyles.settingText}>Sales Alerts</Text>
-                <Text style={dynamicStyles.settingDescription}>Notify when sales are recorded</Text>
-              </View>
-            </View>
-            <Switch
-              value={salesAlerts}
-              onValueChange={(value) => handleNotificationChange('salesAlerts', value)}
-              trackColor={{ false: colors.border, true: colors.primary + '40' }}
-              thumbColor={salesAlerts ? colors.primary : colors.textSecondary}
-            />
-          </View>
-          
-          <View style={[dynamicStyles.settingRow, { borderBottomWidth: 0 }]}>
-            <View style={dynamicStyles.settingLeft}>
-              <Globe size={20} color={colors.primary} style={dynamicStyles.settingIcon} />
-              <View>
-                <Text style={dynamicStyles.settingText}>Low Stock Alerts</Text>
-                <Text style={dynamicStyles.settingDescription}>Alert when inventory is low</Text>
-              </View>
-            </View>
-            <Switch
-              value={lowStockAlerts}
-              onValueChange={(value) => handleNotificationChange('lowStockAlerts', value)}
-              trackColor={{ false: colors.border, true: colors.primary + '40' }}
-              thumbColor={lowStockAlerts ? colors.primary : colors.textSecondary}
-            />
-          </View>
+          ))}
         </Card>
 
+        {/* App Preferences */}
         <Text style={dynamicStyles.sectionTitle}>App Preferences</Text>
         <Card style={[styles.section, dynamicStyles.card]}>
-          <View style={dynamicStyles.settingRow}>
-            <View style={dynamicStyles.settingLeft}>
-              <Globe size={20} color={colors.primary} style={dynamicStyles.settingIcon} />
-              <View>
-                <Text style={dynamicStyles.settingText}>Auto Sync</Text>
-                <Text style={dynamicStyles.settingDescription}>Automatically sync data</Text>
+          {[
+            { key: 'autoSync', icon: Globe, label: 'Auto Sync', desc: 'Automatically sync data', value: autoSync, setter: setAutoSync },
+            { key: 'offlineMode', icon: Smartphone, label: 'Offline Mode', desc: 'Work without internet connection', value: offlineMode, setter: setOfflineMode },
+          ].map((item, idx) => (
+            <View key={item.key} style={[dynamicStyles.settingRow, idx === 1 ? { borderBottomWidth: 0 } : {}]}>
+              <View style={dynamicStyles.settingLeft}>
+                <item.icon size={20} color={colors.primary} style={dynamicStyles.settingIcon} />
+                <View>
+                  <Text style={dynamicStyles.settingText}>{item.label}</Text>
+                  <Text style={dynamicStyles.settingDescription}>{item.desc}</Text>
+                </View>
               </View>
+              <Switch
+                value={item.value}
+                onValueChange={(value) => { item.setter(value); savePreferences({ [item.key]: value }); }}
+                trackColor={{ false: colors.border, true: colors.primary + '40' }}
+                thumbColor={item.value ? colors.primary : colors.textSecondary}
+              />
             </View>
-            <Switch
-              value={autoSync}
-              onValueChange={(value) => handleNotificationChange('autoSync', value)}
-              trackColor={{ false: colors.border, true: colors.primary + '40' }}
-              thumbColor={autoSync ? colors.primary : colors.textSecondary}
-            />
-          </View>
-          
-          <View style={[dynamicStyles.settingRow, { borderBottomWidth: 0 }]}>
-            <View style={dynamicStyles.settingLeft}>
-              <Smartphone size={20} color={colors.primary} style={dynamicStyles.settingIcon} />
-              <View>
-                <Text style={dynamicStyles.settingText}>Offline Mode</Text>
-                <Text style={dynamicStyles.settingDescription}>Work without internet connection</Text>
-              </View>
-            </View>
-            <Switch
-              value={offlineMode}
-              onValueChange={(value) => handleNotificationChange('offlineMode', value)}
-              trackColor={{ false: colors.border, true: colors.primary + '40' }}
-              thumbColor={offlineMode ? colors.primary : colors.textSecondary}
-            />
-          </View>
+          ))}
         </Card>
 
+        {/* Security */}
         <Text style={dynamicStyles.sectionTitle}>Security</Text>
         <Card style={[styles.section, dynamicStyles.card]}>
           <TouchableOpacity style={dynamicStyles.settingRow} onPress={handleChangePassword}>
@@ -598,113 +356,38 @@ export default function ProfileScreen() {
                 <Text style={dynamicStyles.settingDescription}>Update your account password</Text>
               </View>
             </View>
-            <Text style={[styles.themeStatus, { color: colors.textSecondary }]}>›</Text>
+            <Text style={{ color: colors.textSecondary }}>›</Text>
           </TouchableOpacity>
         </Card>
 
-        <Text style={dynamicStyles.sectionTitle}>Account Information</Text>
-        <Card style={[styles.section, dynamicStyles.card]}>
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
-            <Text style={[styles.infoValue, { color: colors.text }]}>{user?.email}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Role:</Text>
-            <Text style={[styles.infoValue, { color: colors.text, textTransform: 'capitalize' }]}>
-              {user?.role}
+        {/* Save Changes Button */}
+        <View style={{ paddingVertical: 20 }}>
+          <TouchableOpacity
+            style={{ backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
+            onPress={handleSaveAllChanges}
+            disabled={loading}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
+              {loading ? 'Saving...' : 'Save Changes'}
             </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Member Since:</Text>
-            <Text style={[styles.infoValue, { color: colors.text }]}>
-              {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-            </Text>
-          </View>
-        </Card>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  profileCard: {
-    marginBottom: 24,
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  photoContainer: {
-    position: 'relative',
-    marginRight: 16,
-  },
-  profilePhoto: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  photoPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#f1f5f9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cameraIcon: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#2563eb',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  saveButton: {
-    marginTop: 8,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-  },
-  infoLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  themeStatus: {
-    fontSize: 12,
-  },
+  header: { padding: 20, paddingBottom: 10 },
+  scrollView: { flex: 1, paddingHorizontal: 20 },
+  profileCard: { marginBottom: 24 },
+  profileHeader: { flexDirection: 'row', alignItems: 'center' },
+  photoContainer: { position: 'relative', marginRight: 16 },
+  profilePhoto: { width: 80, height: 80, borderRadius: 40 },
+  photoPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
+  cameraIcon: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#2563eb', borderRadius: 12, width: 24, height: 24, justifyContent: 'center', alignItems: 'center' },
+  userInfo: { flex: 1 },
+  userName: { fontSize: 20, fontWeight: 'bold', marginBottom: 4 },
+  userEmail: { fontSize: 14, marginBottom: 4 },
+  section: { marginBottom: 24 },
 });
