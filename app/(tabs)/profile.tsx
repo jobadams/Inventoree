@@ -9,7 +9,7 @@ import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 
 export default function ProfileScreen() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, logout } = useAuth();
   const { theme, colors, toggleTheme, setThemeMode } = useTheme();
 
   // Profile states
@@ -31,7 +31,6 @@ export default function ProfileScreen() {
   const [autoSync, setAutoSync] = useState(true);
   const [offlineMode, setOfflineMode] = useState(false);
 
-  // Load preferences on mount
   useEffect(() => {
     loadPreferences();
   }, []);
@@ -360,7 +359,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </Card>
 
-        {/* Save Changes Button */}
+        {/* Save Changes & Logout Buttons */}
         <View style={{ paddingVertical: 20 }}>
           <TouchableOpacity
             style={{ backgroundColor: colors.primary, paddingVertical: 14, borderRadius: 12, alignItems: 'center' }}
@@ -370,6 +369,23 @@ export default function ProfileScreen() {
             <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>
               {loading ? 'Saving...' : 'Save Changes'}
             </Text>
+          </TouchableOpacity>
+
+          {/* Logout Button */}
+          <TouchableOpacity
+            style={{ backgroundColor: '#ef4444', paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginTop: 12 }}
+            onPress={() => {
+              Alert.alert(
+                'Logout',
+                'Are you sure you want to logout?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Logout', style: 'destructive', onPress: () => logout() },
+                ]
+              );
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Logout</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

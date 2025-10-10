@@ -1,20 +1,13 @@
-import { Stack } from 'expo-router';
-import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, Platform, TouchableOpacity, Modal } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu } from 'lucide-react-native';
 import { useAuth } from '../../contexts/auth-context';
-import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
-import Sidebar from '../../components/Sidebar';
-
-const { width } = Dimensions.get('window');
-const SIDEBAR_WIDTH = 280;
+import { useRouter, Slot } from 'expo-router';
+import Toolbar from '../../components/ui/Toolbar';
 
 export default function TabsLayout() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -22,64 +15,44 @@ export default function TabsLayout() {
     }
   }, [user, isLoading]);
 
-  if (isLoading || !user) {
-    return null;
-  }
+  if (isLoading || !user) return null;
 
+  // 🖥 Web layout with toolbar on side
   if (Platform.OS === 'web') {
     return (
       <View style={styles.container}>
         <View style={styles.sidebar}>
-          <Sidebar />
+          <Toolbar />
         </View>
         <View style={styles.content}>
-          <Stack screenOptions={{ headerShown: false }} />
+          <Slot />
         </View>
       </View>
     );
   }
 
+  // 📱 Mobile layout with bottom toolbar
   return (
     <SafeAreaView style={styles.mobileContainer}>
-      <View style={styles.mobileHeader}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => setSidebarVisible(true)}
-        >
-          <Menu size={24} color="#1e293b" />
-        </TouchableOpacity>
+      <View style={styles.content}>
+        <Slot />
       </View>
-
-      <Stack screenOptions={{ headerShown: false }} />
-
-      <Modal
-        visible={sidebarVisible}
-        animationType="slide"
-        presentationStyle="overFullScreen"
-        onRequestClose={() => setSidebarVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={styles.modalBackground}
-            onPress={() => setSidebarVisible(false)}
-          />
-          <View style={styles.modalSidebar}>
-            <Sidebar onClose={() => setSidebarVisible(false)} />
-          </View>
-        </View>
-      </Modal>
+      <View style={styles.bottomToolbar}>
+        <Toolbar />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // Web/Desktop layout
   container: {
     flex: 1,
     flexDirection: 'row',
     backgroundColor: '#f8fafc',
   },
   sidebar: {
-    width: SIDEBAR_WIDTH,
+    width: 280,
     backgroundColor: '#ffffff',
     borderRightWidth: 1,
     borderRightColor: '#e2e8f0',
@@ -87,32 +60,16 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+
+  // Mobile layout
   mobileContainer: {
     flex: 1,
     backgroundColor: '#f8fafc',
   },
-  mobileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+  bottomToolbar: {
     backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-  },
-  menuButton: {
-    padding: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalSidebar: {
-    width: SIDEBAR_WIDTH,
-    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    paddingVertical: 10,
   },
 });

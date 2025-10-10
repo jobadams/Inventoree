@@ -12,8 +12,7 @@ import {
   Home,
   MessageSquare,
   UserCog,
-  Bell,
-  Shield,
+
 } from 'lucide-react-native';
 import { useAuth } from '../contexts/auth-context';
 

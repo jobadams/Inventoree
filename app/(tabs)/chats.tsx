@@ -15,12 +15,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import { useTheme } from '../../contexts/theme-context';
-// const navTheme = theme === 'dark' ? DarkTheme : DefaultTheme;
-
-//  <NavigationContainer theme={navTheme}>
-//   {/* <RootStack /> */}
-// </NavigationContainer> 
 
 
 
@@ -35,11 +29,7 @@ type Message = {
   avatar: string;
 };
 
-const { colors } = useTheme();
 
-<View style={{ backgroundColor: colors.background }}>
-  <Text style={{ color: colors.text }}>Hello</Text>
-</View>
 
 
 const ChatScreen = () => {

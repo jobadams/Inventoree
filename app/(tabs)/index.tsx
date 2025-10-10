@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, Platform, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Package, TrendingUp, AlertTriangle, DollarSign } from 'lucide-react-native';
+import { Package, TrendingUp, AlertTriangle, DollarSign, LogOut } from 'lucide-react-native';
 import { useInventory } from '../../contexts/inventory-context';
 import { useAuth } from '../../contexts/auth-context';
 import { Redirect } from 'expo-router';
@@ -12,7 +12,7 @@ const isWeb = Platform.OS === 'web';
 const cardWidth = isWeb ? (width - 320 - 60) / 2 : (width - 60) / 2; // Account for sidebar on web
 
 export default function DashboardScreen() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, logout } = useAuth();
   const { 
     products, 
     getLowStockProducts, 
@@ -58,13 +58,13 @@ export default function DashboardScreen() {
       color: '#f59e0b',
       bgColor: '#fffbeb',
     },
-    {
-      title: 'Inventory Value',
-      value: `UGX${totalValue.toLocaleString()}`,
-      icon: DollarSign,
-      color: '#10b981',
-      bgColor: '#ecfdf5',
-    },
+    // {
+    //   title: 'Inventory Value',
+    //   value: `UGX${totalValue.toLocaleString()}`,
+    //   icon: DollarSign,
+    //   color: '#10b981',
+    //   bgColor: '#ecfdf5',
+    // },
     {
       title: '30-Day Sales',
       value: salesAnalytics.totalSales.toString(),
@@ -74,12 +74,21 @@ export default function DashboardScreen() {
     },
   ];
 
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.title}>Dashboard</Text>
           <Text style={styles.subtitle}>Welcome back, {user?.name}!</Text>
+
+          {/* Logout button */}
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <LogOut size={20} color="#2563eb" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.statsContainer}>
@@ -176,6 +185,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#64748b',
     marginTop: 4,
+  },
+  logoutButton: {
+    position: 'absolute',
+    right: 20,
+    top: 20,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#e0f2fe',
   },
   statsContainer: {
     flexDirection: 'row',

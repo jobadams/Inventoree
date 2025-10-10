@@ -141,6 +141,13 @@ export default function InventoryScreen() {
         <Text style={styles.title}>Inventory Management</Text>
         <Text style={styles.subtitle}>{products.length} products in stock</Text>
       </View>
+{/* 
+      <View>
+         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <LogOut size={20} color="#ef4444" />
+        <Text style={styles.logoutText}>Logout</Text>
+      </TouchableOpacity>
+      </View> */}
 
       {/* Search + Add */}
       <View style={styles.searchContainer}>
