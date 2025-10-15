@@ -63,7 +63,9 @@ export const [AuthProvider, useAuth] = createContainer(() => {
     }
   };
 
-  const login = useCallback(async (credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> => {
+  const login = useCallback(async (credentials: LoginCredentials): Promise<{
+    user: any; success: boolean; error?: string 
+}> => {
     try {
       // Mock authentication
       const mockUser = MOCK_USERS.find(

@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/auth-context';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -24,6 +25,21 @@ export default function LoginScreen() {
 
     if (!result.success) {
       Alert.alert('Login Failed', result.error || 'Please try again');
+      return;
+    }
+
+    try {
+      // ✅ Store the user's name and email so ChatScreen can use it
+      if (result.user) {
+        const userName = result.user.name || result.user.fullName || result.user.username || 'User';
+        await AsyncStorage.setItem('currentUserName', userName);
+        await AsyncStorage.setItem('currentUserEmail', result.user.email);
+       
+      } else {
+        console.warn('⚠️ No user data returned from login response');
+      }
+    } catch (error) {
+      console.error('Error saving user info to AsyncStorage:', error);
     }
   };
 
@@ -68,12 +84,6 @@ export default function LoginScreen() {
             loading={loading}
             style={styles.loginButton}
           />
-
-          {/* <View style={styles.demoCredentials}>
-            <Text style={styles.demoTitle}>Demo Credentials:</Text>
-            <Text style={styles.demoText}>Admin: admin@inventoree.com / admin123</Text>
-            <Text style={styles.demoText}>Staff: staff@inventoree.com / staff123</Text>
-          </View> */}
         </Card>
 
         <View style={styles.footer}>
@@ -122,23 +132,6 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     marginTop: 8,
-  },
-  demoCredentials: {
-    marginTop: 20,
-    padding: 16,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-  },
-  demoTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  demoText: {
-    fontSize: 12,
-    color: '#64748b',
-    marginBottom: 4,
   },
   footer: {
     flexDirection: 'row',

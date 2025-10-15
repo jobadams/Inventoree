@@ -7,16 +7,14 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-
-
 
 type Message = {
   id: string;
@@ -27,24 +25,25 @@ type Message = {
   date: string;
   isMe: boolean;
   avatar: string;
+  email?: string;
 };
 
-
-
-
 const ChatScreen = () => {
-  const [currentUser, setCurrentUser] = useState<string>('');
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const flatListRef = useRef<FlatList>(null);
 
-  // 🟢 Load user and messages
+  // ✅ Load user and messages
   useEffect(() => {
     const fetchData = async () => {
       try {
         const name = await AsyncStorage.getItem('currentUserName');
+        const email = await AsyncStorage.getItem('currentUserEmail');
         if (name) setCurrentUser(name);
+        if (email) setCurrentUserEmail(email);
 
         const savedMessages = await AsyncStorage.getItem('chatMessages');
         if (savedMessages) {
@@ -57,12 +56,12 @@ const ChatScreen = () => {
     fetchData();
   }, []);
 
-  // 🟢 Scroll to bottom when new message appears
+  // ✅ Auto scroll when new message appears
   useEffect(() => {
     flatListRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
-  // 🟢 Save messages to AsyncStorage
+  // ✅ Save messages persistently
   const saveMessages = async (msgs: Message[]) => {
     try {
       await AsyncStorage.setItem('chatMessages', JSON.stringify(msgs));
@@ -71,9 +70,20 @@ const ChatScreen = () => {
     }
   };
 
-  // 🟢 SEND MESSAGE
+  // ✅ Send message (now checks for name & email)
   const sendMessage = async () => {
-    if ((!input.trim() && selectedImages.length === 0) || !currentUser) return;
+    if (!input.trim() && selectedImages.length === 0) return;
+
+    const name = currentUser || (await AsyncStorage.getItem('currentUserName'));
+    const email = currentUserEmail || (await AsyncStorage.getItem('currentUserEmail'));
+
+    if (!name || !email) {
+      Alert.alert(
+        'Please sign in first',
+        'We need your name and email before sending messages.'
+      );
+      return;
+    }
 
     const now = new Date();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -81,29 +91,29 @@ const ChatScreen = () => {
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      sender: currentUser,
+      sender: name,
       text: input.trim() || undefined,
       images: selectedImages.length > 0 ? [...selectedImages] : undefined,
       time,
       date,
       isMe: true,
       avatar: 'https://randomuser.me/api/portraits/men/33.jpg',
+      email,
     };
 
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
-    await saveMessages(updatedMessages); // persist chat
+    await saveMessages(updatedMessages);
 
     setInput('');
     setSelectedImages([]);
   };
 
-  // 🟡 PICK MULTIPLE IMAGES
+  // ✅ Pick multiple images
   const pickImages = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
     if (status !== 'granted') {
-      Alert.alert('Permission denied', 'We need access to your photos to send images.');
+      Alert.alert('Permission denied', 'We need access to your photos.');
       return;
     }
 
@@ -155,7 +165,7 @@ const ChatScreen = () => {
         contentContainerStyle={{ padding: 16 }}
       />
 
-      {/* Preview selected images before sending */}
+      {/* ✅ Image Preview before sending */}
       {selectedImages.length > 0 && (
         <View style={styles.imagePreviewContainer}>
           <FlatList
@@ -169,6 +179,7 @@ const ChatScreen = () => {
         </View>
       )}
 
+      {/* ✅ Input + Send Section */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={80}
@@ -191,7 +202,6 @@ const ChatScreen = () => {
               (input.trim() || selectedImages.length > 0) && styles.sendButtonActive,
             ]}
             onPress={sendMessage}
-            disabled={!input.trim() && selectedImages.length === 0}
           >
             <Ionicons name="send" size={20} color="#fff" />
           </TouchableOpacity>

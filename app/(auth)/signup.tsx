@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/auth-context';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Card from '../../components/ui/Card';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignupScreen() {
   const [name, setName] = useState('');
@@ -36,6 +37,16 @@ export default function SignupScreen() {
 
     if (!result.success) {
       Alert.alert('Signup Failed', result.error || 'Please try again');
+      return;
+    }
+
+    try {
+      // ✅ Store user data for chat use
+      await AsyncStorage.setItem('currentUserName', name);
+      await AsyncStorage.setItem('currentUserEmail', email);
+      console.log('✅ User info saved for chat after signup:', name);
+    } catch (error) {
+      console.error('Error saving user info:', error);
     }
   };
 
@@ -52,7 +63,7 @@ export default function SignupScreen() {
             resizeMode="contain"
           />
           <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join inventoree to start managing your inventory</Text>
+          <Text style={styles.subtitle}>Join Inventoree to start managing your inventory</Text>
         </View>
 
         <Card style={styles.card}>
