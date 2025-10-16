@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import { useTheme } from '../../contexts/theme-context'; // ✅ Import theme
 
 type Message = {
   id: string;
@@ -29,6 +30,7 @@ type Message = {
 };
 
 const ChatScreen = () => {
+  const { colors } = useTheme(); // ✅ Access theme colors
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -70,7 +72,7 @@ const ChatScreen = () => {
     }
   };
 
-  // ✅ Send message (now checks for name & email)
+  // ✅ Send message (checks for name & email)
   const sendMessage = async () => {
     if (!input.trim() && selectedImages.length === 0) return;
 
@@ -78,10 +80,7 @@ const ChatScreen = () => {
     const email = currentUserEmail || (await AsyncStorage.getItem('currentUserEmail'));
 
     if (!name || !email) {
-      Alert.alert(
-        'Please sign in first',
-        'We need your name and email before sending messages.'
-      );
+      Alert.alert('Please sign in first', 'We need your name and email before sending messages.');
       return;
     }
 
@@ -133,13 +132,21 @@ const ChatScreen = () => {
   const renderItem = ({ item }: { item: Message }) => (
     <View style={[styles.messageContainer, item.isMe && styles.myMessageContainer]}>
       {!item.isMe && <Image source={{ uri: item.avatar }} style={styles.avatar} />}
-      <View style={[styles.bubble, item.isMe ? styles.myBubble : styles.theirBubble]}>
-        <Text style={[styles.sender, item.isMe && styles.mySender]}>
+
+      <View
+        style={[
+          styles.bubble,
+          item.isMe
+            ? { backgroundColor: colors.primary, borderTopRightRadius: 0 }
+            : { backgroundColor: colors.surface, borderTopLeftRadius: 0 },
+        ]}
+      >
+        <Text style={[styles.sender, { color: item.isMe ? colors.onPrimary : colors.textSecondary }]}>
           {item.sender}
         </Text>
 
         {item.text && (
-          <Text style={[styles.messageText, item.isMe && styles.myMessageText]}>
+          <Text style={[styles.messageText, { color: item.isMe ? colors.onPrimary : colors.text }]}>
             {item.text}
           </Text>
         )}
@@ -149,14 +156,15 @@ const ChatScreen = () => {
             <Image key={index} source={{ uri }} style={styles.sentImage} />
           ))}
 
-        <Text style={styles.timestamp}>{item.time}</Text>
+        <Text style={[styles.timestamp, { color: colors.textSecondary }]}>{item.time}</Text>
       </View>
+
       {item.isMe && <Image source={{ uri: item.avatar }} style={styles.avatar} />}
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         ref={flatListRef}
         data={messages}
@@ -167,31 +175,40 @@ const ChatScreen = () => {
 
       {/* ✅ Image Preview before sending */}
       {selectedImages.length > 0 && (
-        <View style={styles.imagePreviewContainer}>
+        <View
+          style={[
+            styles.imagePreviewContainer,
+            { backgroundColor: colors.surface, borderTopColor: colors.border },
+          ]}
+        >
           <FlatList
             horizontal
             data={selectedImages}
             keyExtractor={(uri, idx) => idx.toString()}
-            renderItem={({ item }) => (
-              <Image source={{ uri: item }} style={styles.previewImage} />
-            )}
+            renderItem={({ item }) => <Image source={{ uri: item }} style={styles.previewImage} />}
           />
         </View>
       )}
 
       {/* ✅ Input + Send Section */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={80}
-      >
-        <View style={styles.inputContainer}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={80}>
+        <View
+          style={[
+            styles.inputContainer,
+            { backgroundColor: colors.surface, borderTopColor: colors.border },
+          ]}
+        >
           <TouchableOpacity onPress={pickImages}>
-            <Ionicons name="image-outline" size={26} color="#2563eb" />
+            <Ionicons name="image-outline" size={26} color={colors.primary} />
           </TouchableOpacity>
 
           <TextInput
-            style={styles.textInput}
+            style={[
+              styles.textInput,
+              { borderColor: colors.border, color: colors.text, backgroundColor: colors.background },
+            ]}
             placeholder="Type a message..."
+            placeholderTextColor={colors.textSecondary}
             value={input}
             onChangeText={setInput}
           />
@@ -199,7 +216,9 @@ const ChatScreen = () => {
           <TouchableOpacity
             style={[
               styles.sendButton,
-              (input.trim() || selectedImages.length > 0) && styles.sendButtonActive,
+              (input.trim() || selectedImages.length > 0)
+                ? { backgroundColor: colors.primary }
+                : { backgroundColor: colors.disabled },
             ]}
             onPress={sendMessage}
           >
@@ -214,7 +233,7 @@ const ChatScreen = () => {
 export default ChatScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1 },
   messageContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -228,36 +247,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     maxWidth: '75%',
   },
-  theirBubble: {
-    backgroundColor: '#e0f2fe',
-    borderTopLeftRadius: 0,
-  },
-  myBubble: {
-    backgroundColor: '#2563eb',
-    borderTopRightRadius: 0,
-  },
-  sender: {
-    fontSize: 12,
-    color: '#4b5563',
-    marginBottom: 4,
-  },
-  mySender: {
-    color: '#e0f2fe',
-    textAlign: 'right',
-  },
-  messageText: {
-    fontSize: 15,
-    color: '#111827',
-  },
-  myMessageText: {
-    color: '#fff',
-  },
-  timestamp: {
-    fontSize: 10,
-    color: '#9ca3af',
-    marginTop: 4,
-    textAlign: 'right',
-  },
+  sender: { fontSize: 12, marginBottom: 4 },
+  messageText: { fontSize: 15 },
+  timestamp: { fontSize: 10, marginTop: 4, textAlign: 'right' },
   sentImage: {
     width: 180,
     height: 180,
@@ -274,8 +266,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingLeft: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    backgroundColor: '#fff',
   },
   previewImage: {
     width: 70,
@@ -288,26 +278,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    backgroundColor: '#fff',
   },
   textInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#d1d5db',
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginHorizontal: 8,
   },
   sendButton: {
-    backgroundColor: '#9ca3af',
     padding: 10,
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  sendButtonActive: {
-    backgroundColor: '#2563eb',
   },
 });

@@ -1,3 +1,4 @@
+// app/(auth)/_layout.tsx
 import { Stack } from 'expo-router';
 import { useAuth } from '../../contexts/auth-context';
 import { useEffect } from 'react';
@@ -9,12 +10,16 @@ export default function AuthLayout() {
 
   useEffect(() => {
     if (!isLoading && user) {
+      // If logged in, skip auth and go to main tabs
       router.replace('/(tabs)');
     }
   }, [user, isLoading]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack>
+    
+
+      {/* Auth screens */}
       <Stack.Screen name="login" />
       <Stack.Screen name="signup" />
     </Stack>

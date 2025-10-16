@@ -2,7 +2,8 @@
   "expo": {
     "scheme": "acme",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-web-browser"
     ],
     "name": "StockFlow",
     "slug": "StockFlow",
