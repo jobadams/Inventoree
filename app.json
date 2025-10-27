@@ -3,7 +3,8 @@
     "scheme": "acme",
     "plugins": [
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-sqlite"
     ],
     "name": "StockFlow",
     "slug": "StockFlow",

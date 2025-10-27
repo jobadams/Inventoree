@@ -4,17 +4,29 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Search, Edit, Trash2, Phone, Mail, MapPin, User } from 'lucide-react-native';
 import { useInventory } from '../../contexts/inventory-context';
 import { useAuth } from '../../contexts/auth-context';
+import { useTheme } from '../../contexts/theme-context'; // 🌙 Import theme
 import Card from '../../components/ui/Card';
 
 export default function SuppliersScreen() {
   const { suppliers, products, addSupplier, deleteSupplier, updateSupplier } = useInventory();
   const { hasPermission } = useAuth();
+  const { theme } = useTheme(); // 🎨 Access the current theme (light/dark)
+
+  const isDark = theme === 'dark';
+  const colors = {
+    background: isDark ? '#0f172a' : '#f8fafc',
+    text: isDark ? '#f1f5f9' : '#1e293b',
+    secondaryText: isDark ? '#cbd5e1' : '#64748b',
+    card: isDark ? '#1e293b' : '#ffffff',
+    border: isDark ? '#334155' : '#e2e8f0',
+    button: '#2563eb',
+    delete: '#ef4444',
+  };
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<any>(null); // track supplier being edited
+  const [editingSupplier, setEditingSupplier] = useState<any>(null);
 
-  // Form state
   const [supplierName, setSupplierName] = useState('');
   const [supplierContact, setSupplierContact] = useState('');
   const [supplierEmail, setSupplierEmail] = useState('');
@@ -59,7 +71,6 @@ export default function SuppliersScreen() {
     }
 
     if (editingSupplier) {
-      // update supplier
       await updateSupplier(editingSupplier.id, {
         name: supplierName,
         contactPerson: supplierContact,
@@ -69,7 +80,6 @@ export default function SuppliersScreen() {
       });
       Alert.alert('Success', 'Supplier updated successfully');
     } else {
-      // add new supplier
       await addSupplier({
         name: supplierName,
         contactPerson: supplierContact,
@@ -104,26 +114,29 @@ export default function SuppliersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Suppliers</Text>
-        <Text style={styles.subtitle}>{suppliers.length} suppliers registered</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Suppliers</Text>
+        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
+          {suppliers.length} suppliers registered
+        </Text>
       </View>
 
       <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
-          <Search size={20} color="#64748b" />
+        <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Search size={20} color={colors.secondaryText} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Search suppliers..."
+            placeholderTextColor={colors.secondaryText}
             value={searchQuery}
             onChangeText={setSearchQuery}
-            placeholderTextColor="#94a3b8"
           />
         </View>
+
         {hasPermission('admin') && (
           <TouchableOpacity
-            style={styles.addButton}
+            style={[styles.addButton, { backgroundColor: colors.button }]}
             onPress={() => {
               resetForm();
               setShowAddForm(true);
@@ -135,50 +148,25 @@ export default function SuppliersScreen() {
       </View>
 
       {showAddForm && hasPermission('admin') && (
-        <Card style={{ marginHorizontal: 20, marginBottom: 16, padding: 16 }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>
+        <Card style={{ marginHorizontal: 20, marginBottom: 16, padding: 16, backgroundColor: colors.card }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 16, color: colors.text, marginBottom: 8 }}>
             {editingSupplier ? 'Edit Supplier' : 'Add New Supplier'}
           </Text>
 
-          <TextInput
-            placeholder="Supplier Name"
-            style={styles.input}
-            value={supplierName}
-            onChangeText={setSupplierName}
-          />
-          <TextInput
-            placeholder="Contact Person"
-            style={styles.input}
-            value={supplierContact}
-            onChangeText={setSupplierContact}
-          />
-          <TextInput
-            placeholder="Email"
-            style={styles.input}
-            value={supplierEmail}
-            onChangeText={setSupplierEmail}
-          />
-          <TextInput
-            placeholder="Phone"
-            style={styles.input}
-            value={supplierPhone}
-            onChangeText={setSupplierPhone}
-          />
-          <TextInput
-            placeholder="Address"
-            style={styles.input}
-            value={supplierAddress}
-            onChangeText={setSupplierAddress}
-          />
+          <TextInput placeholder="Supplier Name" style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={supplierName} onChangeText={setSupplierName} />
+          <TextInput placeholder="Contact Person" style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={supplierContact} onChangeText={setSupplierContact} />
+          <TextInput placeholder="Email" style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={supplierEmail} onChangeText={setSupplierEmail} />
+          <TextInput placeholder="Phone" style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={supplierPhone} onChangeText={setSupplierPhone} />
+          <TextInput placeholder="Address" style={[styles.input, { color: colors.text, borderColor: colors.border }]} value={supplierAddress} onChangeText={setSupplierAddress} />
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSaveSupplier}>
+          <TouchableOpacity style={[styles.submitButton, { backgroundColor: colors.button }]} onPress={handleSaveSupplier}>
             <Text style={{ color: 'white', fontWeight: 'bold' }}>
               {editingSupplier ? 'Save Changes' : 'Add Supplier'}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.cancelButton} onPress={resetForm}>
-            <Text style={{ color: '#64748b' }}>Cancel</Text>
+          <TouchableOpacity style={[styles.cancelButton, { borderColor: colors.secondaryText }]} onPress={resetForm}>
+            <Text style={{ color: colors.secondaryText }}>Cancel</Text>
           </TouchableOpacity>
         </Card>
       )}
@@ -188,11 +176,11 @@ export default function SuppliersScreen() {
           const productCount = getSupplierProductCount(supplier.id);
 
           return (
-            <Card key={supplier.id} style={styles.supplierCard}>
+            <Card key={supplier.id} style={[styles.supplierCard, { backgroundColor: colors.card }]}>
               <View style={styles.supplierHeader}>
-                <Text style={styles.supplierName}>{supplier.name}</Text>
-                <View style={styles.productCountBadge}>
-                  <Text style={styles.productCountText}>
+                <Text style={[styles.supplierName, { color: colors.text }]}>{supplier.name}</Text>
+                <View style={[styles.productCountBadge, { backgroundColor: isDark ? '#1d4ed8' : '#eff6ff' }]}>
+                  <Text style={[styles.productCountText, { color: isDark ? '#fff' : '#2563eb' }]}>
                     {productCount} product{productCount !== 1 ? 's' : ''}
                   </Text>
                 </View>
@@ -200,39 +188,39 @@ export default function SuppliersScreen() {
 
               <View style={styles.contactInfo}>
                 <View style={styles.contactItem}>
-                  <User size={16} color="#64748b" />
-                  <Text style={styles.contactText}>{supplier.contactPerson}</Text>
+                  <User size={16} color={colors.secondaryText} />
+                  <Text style={[styles.contactText, { color: colors.secondaryText }]}>{supplier.contactPerson}</Text>
                 </View>
                 <View style={styles.contactItem}>
-                  <Mail size={16} color="#64748b" />
-                  <Text style={styles.contactText}>{supplier.email}</Text>
+                  <Mail size={16} color={colors.secondaryText} />
+                  <Text style={[styles.contactText, { color: colors.secondaryText }]}>{supplier.email}</Text>
                 </View>
                 <View style={styles.contactItem}>
-                  <Phone size={16} color="#64748b" />
-                  <Text style={styles.contactText}>{supplier.phone}</Text>
+                  <Phone size={16} color={colors.secondaryText} />
+                  <Text style={[styles.contactText, { color: colors.secondaryText }]}>{supplier.phone}</Text>
                 </View>
                 <View style={styles.contactItem}>
-                  <MapPin size={16} color="#64748b" />
-                  <Text style={styles.contactText}>{supplier.address}</Text>
+                  <MapPin size={16} color={colors.secondaryText} />
+                  <Text style={[styles.contactText, { color: colors.secondaryText }]}>{supplier.address}</Text>
                 </View>
               </View>
 
               {hasPermission('admin') && (
                 <View style={styles.actionButtons}>
                   <TouchableOpacity
-                    style={styles.editButton}
+                    style={[styles.editButton, { backgroundColor: isDark ? '#1e40af' : '#eff6ff' }]}
                     onPress={() => handleEditSupplier(supplier)}
                   >
-                    <Edit size={16} color="#2563eb" />
-                    <Text style={styles.editButtonText}>Edit</Text>
+                    <Edit size={16} color={isDark ? '#93c5fd' : '#2563eb'} />
+                    <Text style={[styles.editButtonText, { color: isDark ? '#93c5fd' : '#2563eb' }]}>Edit</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.deleteButton}
+                    style={[styles.deleteButton, { backgroundColor: isDark ? '#7f1d1d' : '#fef2f2' }]}
                     onPress={() => handleDeleteSupplier(supplier.id, supplier.name)}
                   >
-                    <Trash2 size={16} color="#ef4444" />
-                    <Text style={styles.deleteButtonText}>Delete</Text>
+                    <Trash2 size={16} color={colors.delete} />
+                    <Text style={[styles.deleteButtonText, { color: colors.delete }]}>Delete</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -242,7 +230,7 @@ export default function SuppliersScreen() {
 
         {filteredSuppliers.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>
+            <Text style={[styles.emptyStateText, { color: colors.secondaryText }]}>
               {searchQuery ? 'No suppliers found matching your search' : 'No suppliers registered'}
             </Text>
           </View>
@@ -253,31 +241,31 @@ export default function SuppliersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1 },
   header: { padding: 20, paddingBottom: 10 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1e293b' },
-  subtitle: { fontSize: 16, color: '#64748b', marginTop: 4 },
+  title: { fontSize: 28, fontWeight: 'bold' },
+  subtitle: { fontSize: 16, marginTop: 4 },
   searchContainer: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 20, gap: 12 },
-  searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#ffffff', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: '#e2e8f0' },
-  searchInput: { flex: 1, marginLeft: 12, fontSize: 16, color: '#1e293b' },
-  addButton: { backgroundColor: '#2563eb', borderRadius: 12, width: 48, height: 48, justifyContent: 'center', alignItems: 'center' },
+  searchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1 },
+  searchInput: { flex: 1, marginLeft: 12, fontSize: 16 },
+  addButton: { borderRadius: 12, width: 48, height: 48, justifyContent: 'center', alignItems: 'center' },
   scrollView: { flex: 1, paddingHorizontal: 20 },
-  supplierCard: { marginBottom: 16, padding: 16 },
+  supplierCard: { marginBottom: 16, padding: 16, borderRadius: 12 },
   supplierHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  supplierName: { fontSize: 18, fontWeight: '600', color: '#1e293b', flex: 1 },
-  productCountBadge: { backgroundColor: '#eff6ff', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
-  productCountText: { fontSize: 12, color: '#2563eb', fontWeight: '600' },
+  supplierName: { fontSize: 18, fontWeight: '600', flex: 1 },
+  productCountBadge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12 },
+  productCountText: { fontSize: 12, fontWeight: '600' },
   contactInfo: { gap: 12, marginBottom: 16 },
   contactItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  contactText: { fontSize: 14, color: '#64748b', flex: 1 },
+  contactText: { fontSize: 14, flex: 1 },
   actionButtons: { flexDirection: 'row', gap: 12 },
-  editButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#eff6ff', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, flex: 1, justifyContent: 'center' },
-  editButtonText: { fontSize: 14, color: '#2563eb', fontWeight: '600', marginLeft: 6 },
-  deleteButton: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef2f2', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, flex: 1, justifyContent: 'center' },
-  deleteButtonText: { fontSize: 14, color: '#ef4444', fontWeight: '600', marginLeft: 6 },
+  editButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, flex: 1, justifyContent: 'center' },
+  editButtonText: { fontSize: 14, fontWeight: '600', marginLeft: 6 },
+  deleteButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, flex: 1, justifyContent: 'center' },
+  deleteButtonText: { fontSize: 14, fontWeight: '600', marginLeft: 6 },
   emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
-  emptyStateText: { fontSize: 16, color: '#64748b', textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 10, marginBottom: 10 },
-  submitButton: { backgroundColor: '#2563eb', padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 8 },
-  cancelButton: { padding: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#64748b' },
+  emptyStateText: { fontSize: 16, textAlign: 'center' },
+  input: { borderWidth: 1, borderRadius: 8, padding: 10, marginBottom: 10 },
+  submitButton: { padding: 12, borderRadius: 8, alignItems: 'center', marginBottom: 8 },
+  cancelButton: { padding: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1 },
 });

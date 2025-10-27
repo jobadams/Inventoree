@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, ShoppingCart, Calendar, DollarSign } from 'lucide-react-native';
+import { Plus, ShoppingCart, DollarSign } from 'lucide-react-native';
 import { useInventory } from '../../contexts/inventory-context';
 import { useAuth } from '../../contexts/auth-context';
+import { useTheme } from '../../contexts/theme-context'; // 🌙 Import theme
 import { Product, Sale } from '../../types/inventory';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -15,6 +16,20 @@ const formatUGX = (amount: number) => `UGX ${amount.toLocaleString('en-UG')}`;
 export default function SalesScreen() {
   const { products, sales, recordSale } = useInventory();
   const { user, hasPermission } = useAuth();
+  const { theme } = useTheme(); // 🎨 Access theme
+  const isDark = theme === 'dark';
+
+  // 🎨 Theme colors
+  const colors = {
+    background: isDark ? '#0f172a' : '#f8fafc',
+    text: isDark ? '#f1f5f9' : '#1e293b',
+    secondaryText: isDark ? '#cbd5e1' : '#64748b',
+    card: isDark ? '#1e293b' : '#ffffff',
+    border: isDark ? '#334155' : '#e2e8f0',
+    accent: '#2563eb',
+    success: '#10b981',
+  };
+
   const [showSaleModal, setShowSaleModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -88,100 +103,133 @@ export default function SalesScreen() {
   const todaysRevenue = todaysSales.reduce((total: number, sale: Sale) => total + sale.totalAmount, 0);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Sales Management</Text>
-        <Text style={styles.subtitle}>{sales.length} total sales recorded</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Sales Management</Text>
+        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
+          {sales.length} total sales recorded
+        </Text>
       </View>
 
+      {/* Stats */}
       <View style={styles.statsContainer}>
-        <Card style={styles.statCard}>
+        <Card style={[styles.statCard, { backgroundColor: colors.card }]}>
           <View style={styles.statIcon}>
-            <ShoppingCart size={24} color="#2563eb" />
+            <ShoppingCart size={24} color={colors.accent} />
           </View>
-          <Text style={styles.statValue}>{todaysSales.length}</Text>
-          <Text style={styles.statLabel}>Today's Sales</Text>
+          <Text style={[styles.statValue, { color: colors.text }]}>{todaysSales.length}</Text>
+          <Text style={[styles.statLabel, { color: colors.secondaryText }]}>Today's Sales</Text>
         </Card>
 
-        <Card style={styles.statCard}>
+        <Card style={[styles.statCard, { backgroundColor: colors.card }]}>
           <View style={styles.statIcon}>
-            <DollarSign size={24} color="#10b981" />
-            {/* <ShillingSign/> */}
+            <DollarSign size={24} color={colors.success} />
           </View>
-          <Text style={styles.statValue}>{formatUGX(todaysRevenue)}</Text>
-          <Text style={styles.statLabel}>Today's Revenue</Text>
+          <Text style={[styles.statValue, { color: colors.success }]}>
+            {formatUGX(todaysRevenue)}
+          </Text>
+          <Text style={[styles.statLabel, { color: colors.secondaryText }]}>Today's Revenue</Text>
         </Card>
       </View>
 
+      {/* Action Button */}
       <View style={styles.actionContainer}>
         {hasPermission('staff') && (
           <Button
             title="Record New Sale"
             onPress={() => setShowSaleModal(true)}
-            style={styles.recordButton}
+            style={[styles.recordButton, { backgroundColor: colors.success }]}
           />
         )}
       </View>
 
+      {/* Sales List */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Recent Sales</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Sales</Text>
 
         {sales.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No sales recorded yet</Text>
+            <Text style={[styles.emptyStateText, { color: colors.secondaryText }]}>
+              No sales recorded yet
+            </Text>
           </View>
         ) : (
           sales
-            .sort((a: Sale, b: Sale) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .sort(
+              (a: Sale, b: Sale) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )
             .map((sale: Sale) => (
-              <Card key={sale.id} style={styles.saleCard}>
+              <Card key={sale.id} style={[styles.saleCard, { backgroundColor: colors.card }]}>
                 <View style={styles.saleHeader}>
-                  <Text style={styles.productName}>{getProductName(sale.productId)}</Text>
-                  <Text style={styles.saleAmount}>{formatUGX(sale.totalAmount)}</Text>
+                  <Text style={[styles.productName, { color: colors.text }]}>
+                    {getProductName(sale.productId)}
+                  </Text>
+                  <Text style={[styles.saleAmount, { color: colors.success }]}>
+                    {formatUGX(sale.totalAmount)}
+                  </Text>
                 </View>
 
                 <View style={styles.saleDetails}>
-                  <Text style={styles.saleDetail}>
+                  <Text style={[styles.saleDetail, { color: colors.secondaryText }]}>
                     Quantity: {sale.quantity} × {formatUGX(sale.unitPrice)}
                   </Text>
                   {sale.customerName && (
-                    <Text style={styles.saleDetail}>Customer: {sale.customerName}</Text>
+                    <Text style={[styles.saleDetail, { color: colors.secondaryText }]}>
+                      Customer: {sale.customerName}
+                    </Text>
                   )}
-                  <Text style={styles.saleDate}>{formatDate(sale.createdAt)}</Text>
+                  <Text style={[styles.saleDate, { color: colors.secondaryText }]}>
+                    {formatDate(sale.createdAt)}
+                  </Text>
                 </View>
               </Card>
             ))
         )}
       </ScrollView>
 
+      {/* Sale Modal */}
       <Modal
         visible={showSaleModal}
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={() => setShowSaleModal(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Record New Sale</Text>
+        <SafeAreaView style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <View
+            style={[
+              styles.modalHeader,
+              { backgroundColor: colors.card, borderBottomColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Record New Sale</Text>
             <TouchableOpacity onPress={() => setShowSaleModal(false)}>
-              <Text style={styles.cancelButton}>Cancel</Text>
+              <Text style={{ color: colors.accent, fontWeight: '600' }}>Cancel</Text>
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
-            <Text style={styles.inputLabel}>Select Product</Text>
+            <Text style={[styles.inputLabel, { color: colors.text }]}>Select Product</Text>
             <ScrollView style={styles.productList} showsVerticalScrollIndicator={false}>
               {availableProducts.map((product: Product) => (
                 <TouchableOpacity
                   key={product.id}
                   style={[
                     styles.productOption,
-                    selectedProduct === product.id && styles.selectedProduct,
+                    {
+                      backgroundColor:
+                        selectedProduct === product.id ? colors.accent + '22' : colors.card,
+                      borderColor:
+                        selectedProduct === product.id ? colors.accent : colors.border,
+                    },
                   ]}
                   onPress={() => setSelectedProduct(product.id)}
                 >
-                  <Text style={styles.productOptionName}>{product.name}</Text>
-                  <Text style={styles.productOptionDetails}>
+                  <Text style={[styles.productOptionName, { color: colors.text }]}>
+                    {product.name}
+                  </Text>
+                  <Text style={[styles.productOptionDetails, { color: colors.secondaryText }]}>
                     {formatUGX(product.price)} • {product.quantity} available
                   </Text>
                 </TouchableOpacity>
@@ -204,25 +252,33 @@ export default function SalesScreen() {
             />
 
             {selectedProduct && quantity && (
-              <Card style={styles.summaryCard}>
-                <Text style={styles.summaryTitle}>Sale Summary</Text>
+              <Card style={[styles.summaryCard, { backgroundColor: colors.card }]}>
+                <Text style={[styles.summaryTitle, { color: colors.text }]}>Sale Summary</Text>
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Product:</Text>
-                  <Text style={styles.summaryValue}>{getProductName(selectedProduct)}</Text>
+                  <Text style={[styles.summaryLabel, { color: colors.secondaryText }]}>
+                    Product:
+                  </Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>
+                    {getProductName(selectedProduct)}
+                  </Text>
                 </View>
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Quantity:</Text>
-                  <Text style={styles.summaryValue}>{quantity}</Text>
+                  <Text style={[styles.summaryLabel, { color: colors.secondaryText }]}>
+                    Quantity:
+                  </Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>{quantity}</Text>
                 </View>
                 <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Unit Price:</Text>
-                  <Text style={styles.summaryValue}>
+                  <Text style={[styles.summaryLabel, { color: colors.secondaryText }]}>
+                    Unit Price:
+                  </Text>
+                  <Text style={[styles.summaryValue, { color: colors.text }]}>
                     {formatUGX(products.find((p) => p.id === selectedProduct)?.price || 0)}
                   </Text>
                 </View>
-                <View style={[styles.summaryRow, styles.totalRow]}>
-                  <Text style={styles.totalLabel}>Total:</Text>
-                  <Text style={styles.totalValue}>
+                <View style={[styles.summaryRow, styles.totalRow, { borderTopColor: colors.border }]}>
+                  <Text style={[styles.totalLabel, { color: colors.text }]}>Total:</Text>
+                  <Text style={[styles.totalValue, { color: colors.success }]}>
                     {formatUGX(
                       (products.find((p) => p.id === selectedProduct)?.price || 0) *
                         parseInt(quantity || '0')
@@ -237,7 +293,7 @@ export default function SalesScreen() {
               onPress={handleRecordSale}
               loading={loading}
               disabled={!selectedProduct || !quantity}
-              style={styles.recordSaleButton}
+              style={[styles.recordSaleButton, { backgroundColor: colors.success }]}
             />
           </ScrollView>
         </SafeAreaView>
@@ -247,208 +303,38 @@ export default function SalesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  header: {
-    padding: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1e293b',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#64748b',
-    marginTop: 4,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 16,
-  },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  statIcon: {
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    textAlign: 'center',
-  },
-  actionContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  recordButton: {
-    backgroundColor: '#10b981',
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 16,
-  },
-  saleCard: {
-    marginBottom: 12,
-  },
-  saleHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  productName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
-    flex: 1,
-  },
-  saleAmount: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#10b981',
-  },
-  saleDetails: {
-    gap: 4,
-  },
-  saleDetail: {
-    fontSize: 14,
-    color: '#64748b',
-  },
-  saleDate: {
-    fontSize: 12,
-    color: '#94a3b8',
-    marginTop: 4,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-  emptyStateText: {
-    fontSize: 16,
-    color: '#64748b',
-    textAlign: 'center',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
+  container: { flex: 1 },
+  header: { padding: 20, paddingBottom: 10 },
+  title: { fontSize: 28, fontWeight: 'bold' },
+  subtitle: { fontSize: 16, marginTop: 4 },
+  statsContainer: { flexDirection: 'row', paddingHorizontal: 20, gap: 16 },
+  statCard: { flex: 1, alignItems: 'center', paddingVertical: 20 },
+  statIcon: { marginBottom: 8 },
+  statValue: { fontSize: 24, fontWeight: 'bold', marginBottom: 4 },
+  statLabel: { fontSize: 12, textAlign: 'center' },
+  actionContainer: { paddingHorizontal: 20, paddingVertical: 16 },
+  scrollView: { flex: 1, paddingHorizontal: 20 },
+  sectionTitle: { fontSize: 20, fontWeight: '600', marginBottom: 16 },
+  saleCard: { marginBottom: 12, borderRadius: 12, padding: 12 },
+  saleHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  saleDetails: { marginTop: 4, gap: 4 },
+  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
+  modalContainer: { flex: 1 },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
-    backgroundColor: '#ffffff',
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1e293b',
-  },
-  cancelButton: {
-    fontSize: 16,
-    color: '#2563eb',
-    fontWeight: '600',
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  inputLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 12,
-  },
-  productList: {
-    maxHeight: 200,
-    marginBottom: 20,
-  },
-  productOption: {
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  selectedProduct: {
-    borderColor: '#2563eb',
-    backgroundColor: '#eff6ff',
-  },
-  productOptionName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  productOptionDetails: {
-    fontSize: 14,
-    color: '#64748b',
-  },
-  summaryCard: {
-    backgroundColor: '#f1f5f9',
-    marginVertical: 20,
-  },
-  summaryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 12,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: '#64748b',
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  totalRow: {
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-    paddingTop: 8,
-    marginTop: 8,
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1e293b',
-  },
-  totalValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#10b981',
-  },
-  recordSaleButton: {
-    backgroundColor: '#10b981',
-    marginTop: 20,
-  },
+  modalContent: { flex: 1, padding: 20 },
+  inputLabel: { fontSize: 16, fontWeight: '600', marginBottom: 12 },
+  productList: { maxHeight: 200, marginBottom: 20 },
+  productOption: { padding: 16, borderRadius: 8, marginBottom: 8, borderWidth: 1 },
+  summaryCard: { marginVertical: 20, borderRadius: 8, padding: 16 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+  totalRow: { borderTopWidth: 1, paddingTop: 8, marginTop: 8 },
+  totalLabel: { fontSize: 16, fontWeight: 'bold' },
+  totalValue: { fontSize: 16, fontWeight: 'bold' },
+  recordSaleButton: { marginTop: 20 },
 });

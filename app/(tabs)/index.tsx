@@ -1,4 +1,4 @@
-import React, { useState, useContext, createContext } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -16,60 +16,17 @@ import {
   LogOut,
   Sun,
   Moon,
+  DollarSign,
 } from 'lucide-react-native';
 import { useInventory } from '../../contexts/inventory-context';
 import { useAuth } from '../../contexts/auth-context';
 import { Redirect } from 'expo-router';
 import Card from '../../components/ui/Card';
+import { useTheme } from '../../contexts/theme-context';
 
-// === Responsive layout setup ===
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 const cardWidth = isWeb ? (width - 320 - 60) / 2 : (width - 60) / 2;
-
-// === Theme Context Setup ===
-type Theme = 'light' | 'dark';
-const ThemeContext = createContext({
-  theme: 'light' as Theme,
-  toggleTheme: () => {},
-});
-
-export const useTheme = () => useContext(ThemeContext);
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
-  const toggleTheme = () =>
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-// === Define Color Palettes ===
-const themeColors = {
-  light: {
-    background: '#f8fafc',
-    text: '#1e293b',
-    subtext: '#64748b',
-    primary: '#2563eb',
-    accent: '#e0f2fe',
-    card: '#ffffff',
-    warningBg: '#fffbeb',
-    warningText: '#92400e',
-  },
-  dark: {
-    background: '#0f172a',
-    text: '#f1f5f9',
-    subtext: '#94a3b8',
-    primary: '#3b82f6',
-    accent: '#1e293b',
-    card: '#1e293b',
-    warningBg: '#78350f',
-    warningText: '#fde68a',
-  },
-};
 
 export default function DashboardScreen() {
   const { user, isLoading: authLoading, logout } = useAuth();
@@ -80,8 +37,9 @@ export default function DashboardScreen() {
     getSalesAnalytics,
     isLoading,
   } = useInventory();
-  const { theme, toggleTheme } = useTheme();
-  const colors = themeColors[theme];
+
+  const { theme, toggleTheme, colors } = useTheme();
+  const isDark = theme === 'dark';
 
   if (authLoading) return null;
   if (!user) return <Redirect href="/(auth)/login" />;
@@ -90,9 +48,7 @@ export default function DashboardScreen() {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.subtext }]}>
-            Loading dashboard...
-          </Text>
+          <Text style={[styles.loadingText, { color: colors.subtext }]}>Loading dashboard...</Text>
         </View>
       </SafeAreaView>
     );
@@ -115,18 +71,23 @@ export default function DashboardScreen() {
       value: lowStockProducts.length.toString(),
       icon: AlertTriangle,
       color: '#f59e0b',
-      bgColor: colors.warningBg,
+      bgColor: isDark ? '#78350f' : '#fef3c7',
     },
     {
       title: '30-Day Sales',
       value: salesAnalytics.totalSales.toString(),
       icon: TrendingUp,
       color: '#8b5cf6',
-      bgColor: theme === 'light' ? '#f3e8ff' : '#4c1d95',
+      bgColor: isDark ? '#5b21b6' : '#ede9fe',
+    },
+    {
+      title: 'Inventory Value',
+      value: `UGX${totalValue.toLocaleString()}`,
+      icon: DollarSign,
+      color: '#10b981',
+      bgColor: isDark ? '#064e3b' : '#d1fae5',
     },
   ];
-
-  const handleLogout = () => logout();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -135,10 +96,10 @@ export default function DashboardScreen() {
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.text }]}>Dashboard</Text>
           <Text style={[styles.subtitle, { color: colors.subtext }]}>
-            Welcome back, {user?.name}!
+            Welcome back, {user?.name || 'User'}!
           </Text>
 
-          {/* Logout + Theme Toggle */}
+          {/* === Top Buttons (Theme + Logout) === */}
           <View style={styles.headerButtons}>
             <TouchableOpacity
               style={[styles.headerButton, { backgroundColor: colors.accent }]}
@@ -153,7 +114,7 @@ export default function DashboardScreen() {
 
             <TouchableOpacity
               style={[styles.headerButton, { backgroundColor: colors.accent }]}
-              onPress={handleLogout}
+              onPress={logout}
             >
               <LogOut size={20} color={colors.primary} />
             </TouchableOpacity>
@@ -182,12 +143,8 @@ export default function DashboardScreen() {
                     <Icon size={24} color={stat.color} />
                   </View>
                 </View>
-                <Text style={[styles.statValue, { color: colors.text }]}>
-                  {stat.value}
-                </Text>
-                <Text style={[styles.statTitle, { color: colors.subtext }]}>
-                  {stat.title}
-                </Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>{stat.value}</Text>
+                <Text style={[styles.statTitle, { color: colors.subtext }]}>{stat.title}</Text>
               </Card>
             );
           })}
@@ -198,42 +155,35 @@ export default function DashboardScreen() {
           <Card
             style={[
               styles.alertCard,
-              { backgroundColor: colors.warningBg, borderLeftColor: '#f59e0b' },
+              { backgroundColor: colors.card, borderLeftColor: '#f59e0b' },
             ]}
           >
             <View style={styles.alertHeader}>
               <AlertTriangle size={20} color="#f59e0b" />
-              <Text style={[styles.alertTitle, { color: colors.warningText }]}>
-                Low Stock Alert
-              </Text>
+              <Text style={[styles.alertTitle, { color: colors.text }]}>Low Stock Alert</Text>
             </View>
-            <Text
-              style={[styles.alertDescription, { color: colors.warningText }]}
-            >
+            <Text style={[styles.alertDescription, { color: colors.subtext }]}>
               {lowStockProducts.length} product
               {lowStockProducts.length > 1 ? 's' : ''} running low on stock
             </Text>
-            <ScrollView style={styles.lowStockScroll} nestedScrollEnabled>
-              {lowStockProducts.map((product) => {
-                const isCritical = product.quantity <= product.minQuantity / 2;
-                return (
-                  <View
-                    key={product.id}
-                    style={[
-                      styles.lowStockItem,
-                      isCritical && styles.criticalItem,
-                    ]}
-                  >
-                    <Text style={[styles.productName, { color: colors.warningText }]}>
-                      {product.name}
-                    </Text>
-                    <Text style={[styles.stockLevel, { color: colors.subtext }]}>
-                      {product.quantity} left (min: {product.minQuantity})
-                    </Text>
-                  </View>
-                );
-              })}
-            </ScrollView>
+            {lowStockProducts.slice(0, 5).map((product) => {
+              const isCritical = product.quantity <= product.minQuantity / 2;
+              return (
+                <View
+                  key={product.id}
+                  style={[
+                    styles.lowStockItem,
+                    isCritical && styles.criticalItem,
+                    { backgroundColor: isCritical ? (isDark ? '#7f1d1d' : '#fef2f2') : 'transparent' },
+                  ]}
+                >
+                  <Text style={[styles.productName, { color: colors.text }]}>{product.name}</Text>
+                  <Text style={[styles.stockLevel, { color: colors.subtext }]}>
+                    {product.quantity} left (min: {product.minQuantity})
+                  </Text>
+                </View>
+              );
+            })}
           </Card>
         )}
 
@@ -247,25 +197,19 @@ export default function DashboardScreen() {
               <Text style={[styles.salesValue, { color: colors.primary }]}>
                 UGX{salesAnalytics.totalRevenue.toLocaleString()}
               </Text>
-              <Text style={[styles.salesLabel, { color: colors.subtext }]}>
-                Total Revenue
-              </Text>
+              <Text style={[styles.salesLabel, { color: colors.subtext }]}>Total Revenue</Text>
             </View>
             <View style={styles.salesStat}>
               <Text style={[styles.salesValue, { color: colors.primary }]}>
                 {salesAnalytics.totalQuantitySold}
               </Text>
-              <Text style={[styles.salesLabel, { color: colors.subtext }]}>
-                Items Sold
-              </Text>
+              <Text style={[styles.salesLabel, { color: colors.subtext }]}>Items Sold</Text>
             </View>
             <View style={styles.salesStat}>
               <Text style={[styles.salesValue, { color: colors.primary }]}>
                 UGX{salesAnalytics.averageOrderValue.toFixed(2)}
               </Text>
-              <Text style={[styles.salesLabel, { color: colors.subtext }]}>
-                Avg Order Value
-              </Text>
+              <Text style={[styles.salesLabel, { color: colors.subtext }]}>Avg Order Value</Text>
             </View>
           </View>
         </Card>
@@ -274,11 +218,9 @@ export default function DashboardScreen() {
   );
 }
 
-// === Styles (mostly layout & spacing) ===
+// === Styles ===
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { fontSize: 16 },
   scrollView: { flex: 1 },
@@ -292,10 +234,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-  headerButton: {
-    padding: 8,
-    borderRadius: 8,
-  },
+  headerButton: { padding: 8, borderRadius: 8 },
   statsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -316,28 +255,23 @@ const styles = StyleSheet.create({
   alertCard: {
     marginHorizontal: 20,
     borderLeftWidth: 4,
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
+    marginBottom: 16,
   },
   alertHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   alertTitle: { fontSize: 16, fontWeight: '600', marginLeft: 8 },
   alertDescription: { fontSize: 14, marginBottom: 12 },
-  lowStockScroll: { maxHeight: 180, marginTop: 8, gap: 8 },
   lowStockItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  criticalItem: {
-    backgroundColor: '#fef2f2',
-    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
+  criticalItem: { paddingHorizontal: 8 },
   productName: { fontSize: 14, fontWeight: '500', flex: 1 },
   stockLevel: { fontSize: 12 },
-  salesCard: { marginHorizontal: 20, marginBottom: 20 },
+  salesCard: { marginHorizontal: 20, marginBottom: 20, paddingVertical: 16 },
   cardTitle: { fontSize: 18, fontWeight: '600', marginBottom: 16 },
   salesStats: { flexDirection: 'row', justifyContent: 'space-between' },
   salesStat: { alignItems: 'center', flex: 1 },

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ColorValue } from 'react-native/Libraries/StyleSheet/StyleSheet';
 
 export type Theme = 'light' | 'dark';
 
@@ -28,9 +29,9 @@ interface ThemeContextType {
 const lightTheme: ThemeColors = {
   background: '#f8fafc',
   surface: '#ffffff',
-  primary: '#2563eb',
-  secondary: '#64748b',
-  text: '#1e293b',
+  primary: '#4861d1ff',
+  secondary: '#7d8796ff',
+  text: '#1350c2ff',
   textSecondary: '#64748b',
   border: '#e2e8f0',
   error: '#ef4444',
@@ -40,12 +41,12 @@ const lightTheme: ThemeColors = {
 
 const darkTheme: ThemeColors = {
   background: '#0f172a',
-  surface: '#1e293b',
-  primary: '#3b82f6',
-  secondary: '#94a3b8',
-  text: '#f1f5f9',
-  textSecondary: '#94a3b8',
-  border: '#334155',
+  surface: '#101a2bff',
+  primary: '#5772a5ff',
+  secondary: '#8091aaff',
+  text: '#1f71c2ff',
+  textSecondary: '#516b97ff',
+  border: '#161b2bff',
   error: '#f87171',
   success: '#34d399',
   warning: '#fbbf24',
