@@ -14,8 +14,6 @@ import {
   TrendingUp,
   AlertTriangle,
   LogOut,
-  Sun,
-  Moon,
   DollarSign,
 } from 'lucide-react-native';
 import { useInventory } from '../../contexts/inventory-context';
@@ -38,8 +36,7 @@ export default function DashboardScreen() {
     isLoading,
   } = useInventory();
 
-  const { theme, toggleTheme, colors } = useTheme();
-  const isDark = theme === 'dark';
+  const { colors } = useTheme();
 
   if (authLoading) return null;
   if (!user) return <Redirect href="/(auth)/login" />;
@@ -71,21 +68,21 @@ export default function DashboardScreen() {
       value: lowStockProducts.length.toString(),
       icon: AlertTriangle,
       color: '#f59e0b',
-      bgColor: isDark ? '#78350f' : '#fef3c7',
+      bgColor: '#fef3c7',
     },
     {
       title: '30-Day Sales',
       value: salesAnalytics.totalSales.toString(),
       icon: TrendingUp,
       color: '#8b5cf6',
-      bgColor: isDark ? '#5b21b6' : '#ede9fe',
+      bgColor: '#ede9fe',
     },
     {
       title: 'Inventory Value',
       value: `UGX${totalValue.toLocaleString()}`,
       icon: DollarSign,
       color: '#10b981',
-      bgColor: isDark ? '#064e3b' : '#d1fae5',
+      bgColor: '#d1fae5',
     },
   ];
 
@@ -99,19 +96,8 @@ export default function DashboardScreen() {
             Welcome back, {user?.name || 'User'}!
           </Text>
 
-          {/* === Top Buttons (Theme + Logout) === */}
+          {/* === Top Button (Logout Only) === */}
           <View style={styles.headerButtons}>
-            <TouchableOpacity
-              style={[styles.headerButton, { backgroundColor: colors.accent }]}
-              onPress={toggleTheme}
-            >
-              {theme === 'light' ? (
-                <Moon size={20} color={colors.primary} />
-              ) : (
-                <Sun size={20} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-
             <TouchableOpacity
               style={[styles.headerButton, { backgroundColor: colors.accent }]}
               onPress={logout}
@@ -174,7 +160,7 @@ export default function DashboardScreen() {
                   style={[
                     styles.lowStockItem,
                     isCritical && styles.criticalItem,
-                    { backgroundColor: isCritical ? (isDark ? '#7f1d1d' : '#fef2f2') : 'transparent' },
+                    { backgroundColor: isCritical ? '#fef2f2' : 'transparent' },
                   ]}
                 >
                   <Text style={[styles.productName, { color: colors.text }]}>{product.name}</Text>

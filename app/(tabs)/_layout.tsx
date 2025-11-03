@@ -6,6 +6,7 @@ import { useRouter, Slot } from 'expo-router';
 import Toolbar from '../../components/ui/Toolbar';
 import { useTheme } from '../../contexts/theme-context'; // ✅ useTheme instead of ThemeProvider
 
+
 export default function TabsLayout() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
