@@ -1,34 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import createContextHook from '@nkzw/create-context-hook';
-import createContainer  from 'constate';
-
+import createContainer from 'constate';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, AuthState, LoginCredentials, SignupCredentials } from '../types/auth';
 
 const STORAGE_KEYS = {
   USER: 'inventoree_user',
   TOKEN: 'inventoree_token',
+  USERS: 'inventoree_users', // Stores all registered users
 };
-
-// Mock users for demo
-const MOCK_USERS = [
-  {
-    id: '1',
-    email: 'admin@inventoree.com',
-    password: 'admin123',
-    name: 'Boss',
-    role: 'admin' as const,
-    createdAt: new Date().toISOString(),
-  },
-  // {
-  //   id: '2',
-  //   email: 'staff@inventoree.com',
-  //   password: 'staff123',
-  //   name: 'Staff User',
-  //   role: 'staff' as const,
-  //   createdAt: new Date().toISOString(),
-  // },
-];
 
 export const [AuthProvider, useAuth] = createContainer(() => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -37,6 +16,7 @@ export const [AuthProvider, useAuth] = createContainer(() => {
     isLoading: true,
   });
 
+  // Load current session
   useEffect(() => {
     loadStoredAuth();
   }, []);
@@ -63,76 +43,83 @@ export const [AuthProvider, useAuth] = createContainer(() => {
     }
   };
 
-  const login = useCallback(async (credentials: LoginCredentials): Promise<{
-    user: any; success: boolean; error?: string 
-}> => {
+  // 🧩 Helper to load all stored users
+  const getStoredUsers = async (): Promise<User[]> => {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.USERS);
+    return data ? JSON.parse(data) : [];
+  };
+
+  // 🧠 Save users
+  const saveUsers = async (users: User[]) => {
+    await AsyncStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  };
+
+  // ✅ Login
+  const login = useCallback(async (credentials: LoginCredentials): Promise<{ user?: User; success: boolean; error?: string }> => {
     try {
-      // Mock authentication
-      const mockUser = MOCK_USERS.find(
+      const users = await getStoredUsers();
+
+      const foundUser = users.find(
         u => u.email === credentials.email && u.password === credentials.password
       );
 
-      if (!mockUser) {
+      if (!foundUser) {
         return { success: false, error: 'Invalid email or password' };
       }
 
-      const user: User = {
-        id: mockUser.id,
-        email: mockUser.email,
-        name: mockUser.name,
-        role: mockUser.role,
-        createdAt: mockUser.createdAt,
-        bio: '',
-        profilePhoto: ''
-      };
-
-      const token = `mock_token_${Date.now()}`;
+      const token = `inventoree_token_${Date.now()}`;
 
       await Promise.all([
-        AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user)),
+        AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(foundUser)),
         AsyncStorage.setItem(STORAGE_KEYS.TOKEN, token),
       ]);
 
       setAuthState({
-        user,
+        user: foundUser,
         token,
         isLoading: false,
       });
 
-      return { success: true };
+      return { success: true, user: foundUser };
     } catch (error) {
       console.error('Login error:', error);
       return { success: false, error: 'Login failed. Please try again.' };
     }
   }, []);
 
+  // 🆕 Signup
   const signup = useCallback(async (credentials: SignupCredentials): Promise<{ success: boolean; error?: string }> => {
     try {
+      const users = await getStoredUsers();
+
       // Check if user already exists
-      const existingUser = MOCK_USERS.find(u => u.email === credentials.email);
+      const existingUser = users.find(u => u.email === credentials.email);
       if (existingUser) {
         return { success: false, error: 'User with this email already exists' };
       }
 
-      const user: User = {
+      const newUser: User = {
         id: Date.now().toString(),
         email: credentials.email,
+        password: credentials.password, // stored locally for now
         name: credentials.name,
         role: credentials.role || 'staff',
         createdAt: new Date().toISOString(),
         bio: '',
-        profilePhoto: ''
+        profilePhoto: '',
       };
 
-      const token = `mock_token_${Date.now()}`;
+      const token = `inventoree_token_${Date.now()}`;
 
+      const updatedUsers = [...users, newUser];
       await Promise.all([
-        AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user)),
+        saveUsers(updatedUsers),
+        AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser)),
         AsyncStorage.setItem(STORAGE_KEYS.TOKEN, token),
       ]);
 
       setAuthState({
-        user,
+        user: newUser,
         token,
         isLoading: false,
       });
@@ -144,6 +131,7 @@ export const [AuthProvider, useAuth] = createContainer(() => {
     }
   }, []);
 
+  // 🚪 Logout
   const logout = useCallback(async () => {
     try {
       await Promise.all([
@@ -161,26 +149,30 @@ export const [AuthProvider, useAuth] = createContainer(() => {
     }
   }, []);
 
+  // 👑 Role-based permission
   const hasPermission = useCallback((requiredRole: 'admin' | 'staff' | 'viewer'): boolean => {
     if (!authState.user) return false;
-    
     const roleHierarchy = { admin: 3, staff: 2, viewer: 1 };
-    const userLevel = roleHierarchy[authState.user.role];
-    const requiredLevel = roleHierarchy[requiredRole];
-    
-    return userLevel >= requiredLevel;
+    return roleHierarchy[authState.user.role] >= roleHierarchy[requiredRole];
   }, [authState.user]);
 
+  // 🪪 Update Profile
   const updateProfile = useCallback(async (updates: Partial<Pick<User, 'name' | 'profilePhoto' | 'bio' | 'phone' | 'location'>>): Promise<{ success: boolean; error?: string }> => {
     if (!authState.user) {
       return { success: false, error: 'User not authenticated' };
     }
 
     try {
+      const users = await getStoredUsers();
       const updatedUser = { ...authState.user, ...updates };
-      
-      await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updatedUser));
-      
+
+      const updatedUsers = users.map(u => (u.id === updatedUser.id ? updatedUser : u));
+
+      await Promise.all([
+        saveUsers(updatedUsers),
+        AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updatedUser)),
+      ]);
+
       setAuthState(prev => ({
         ...prev,
         user: updatedUser,
@@ -193,8 +185,9 @@ export const [AuthProvider, useAuth] = createContainer(() => {
     }
   }, [authState.user]);
 
-  const getAllUsers = useCallback((): User[] => {
-    return MOCK_USERS.map(({ password, ...user }) => user);
+  // 👥 Fetch all users (for admin)
+  const getAllUsers = useCallback(async (): Promise<User[]> => {
+    return await getStoredUsers();
   }, []);
 
   return useMemo(() => ({

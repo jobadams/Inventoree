@@ -1,27 +1,53 @@
 {
   "expo": {
-    "scheme": "acme",
-    "plugins": [
-      "expo-router",
-      "expo-web-browser",
-      "expo-sqlite"
-    ],
-    "name": "StockFlow",
-    "slug": "StockFlow",
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "beaf4ff4-dd88-47d2-8236-fb1cb970142c"
-      }
+    "name": "Inventoree",
+    "slug": "inventoree",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/Inventoree Icon.png",
+    "scheme": "inventoree",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/Inventoree Icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "android": {
-      "package": "com.adams03coder.StockFlow"
+      "package": "com.jobadams.inventoree",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/Inventoree Icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "ios": {
-      "bundleIdentifier": "com.adams03coder.StockFlow",
+      "bundleIdentifier": "com.jobadams.inventoree",
+      "supportsTablet": true,
+      "buildNumber": "1.0.0",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "NSCameraUsageDescription": "This app uses the camera for scanning product barcodes."
       }
-    }
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_PROJECT_ID"
+      }
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
   }
 }

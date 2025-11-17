@@ -1,5 +1,5 @@
 {
-  "name": "stockflow",
+  "name": "inventoree",
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
@@ -22,7 +22,7 @@
     "expo-location": "^19.0.7",
     "expo-router": "~6.0.0",
     "expo-splash-screen": "~31.0.10",
-    "expo-sqlite": "~16.0.8",
+    "expo-sqlite": "^16.0.9",
     "expo-web-browser": "~15.0.8",
     "firebase": "^12.5.0",
     "lucide-react-native": "^0.544.0",
